@@ -1,12 +1,179 @@
 /**
  * List handler for reservation resources
  */
-async function list(req, res) {
-  res.json({
-    data: [],
-  });
+
+  const service = require("./reservations.service")
+
+  const validProperties = [
+    "mobile_number",
+    "first_name",
+    "last_name",
+    "people",
+    "reservation_date",
+    "reservation_time"
+  ]
+
+  async function reservationExists(req, res, next) {
+    const {reservation_id} = req.params;
+    
+    const reservation =  await service.read(reservation_id)
+
+    if (reservation) {
+      return next ();
+    } else {
+      return next ({
+        status: 404,
+        message: `Reservation with id:${reservation_id} does not exist`
+      })
+    }
+  }
+
+  function hasValidProperties(req, res, next) {
+    const data = req.body.data;
+
+    if (!data) {
+      return next({
+        status: 400,
+        message: `Must fill out fields.`
+      })
+    }
+
+    const missingFields = [];
+    for (let key of validProperties) {
+      if (!Object.keys(data).includes(key)) missingFields.push(key)
+    }
+  
+    if (missingFields.length) {
+      return next({
+        status: 400,
+        message: `Missing field(s): ${missingFields.join(", ")}`,
+      });
+    }
+
+    const isEmpty = [];
+     for (let key of Object.keys(data)) {
+       if (!data[key] ||data[key] == '' || 0) {
+         isEmpty.push(key)
+        }
+     };
+
+    let emptyFields;
+    if (isEmpty) emptyFields = isEmpty.join(", ")
+    if (isEmpty.length) {
+      return next({
+      status: 400,
+      message: `Empty fields: ${emptyFields}`,
+    });
+  }
+    next();
+
 }
 
+  function hasValidPropertyValues(req, res, next) {
+    if (typeof req.body.data.people !== "number") {
+      return next({
+        status: 400,
+        message: `people must be a number.`,
+      });
+    } else if (!Date.parse(req.body.data.reservation_date)){
+      return next({
+        status: 400,
+        message: `reservation_date must be a date.`,
+      });
+    } else if (req.body.data.reservation_time.length !== 5) { 
+      return next({
+        status: 400,
+        message: `reservation_time must be a valid time.`,
+      });
+    } else {
+      next();
+    }
+  }
+
+  function dateNotPastOrTuesday(req, res, next) {
+    //The following code converts the reservation_date in the date into a format that works with the Date constructor, allowing the getDay() method to be used
+
+    let date = req.body.data.reservation_date;
+    date = date.substr(5, 2) + "/" + date.substr(8, 2) + "/" + date.substr(2, 2)
+    const today = new Date();
+    const fullDate = new Date(date);
+    const day = fullDate.getDay();
+
+    if (day == 2) {
+      return next ({
+        status: 400,
+        message: "closed on tuesday"
+      })
+    } else if (fullDate < today) {
+      return next({
+        status: 400,
+        message: "reservation_date must be in the future"
+      })
+    } else {
+      next();
+    }
+  }
+
+  async function list(req, res) {
+    let results;
+    if (req.query.date) results = await service.listByDate(req.query.date);
+    if (req.query.mobile_number) results = await service.listByNumber(req.query.mobile_number);
+    res.json({ data: results})
+  }
+
+  async function read (req, res, next) {
+    const {reservation_id} = req.params;
+    const results = await service.read(reservation_id);
+    res.json({data: results})
+  }
+
+  async function create(req, res, next) {
+    const {status} = req.body.data;
+    if (status == "seated" || status == "finished") return next ({
+      status: 400,
+      message: "status cannot be 'seated' or 'finished'"
+    })
+    await service.create(req.body.data)
+    .then((data) => res.status(201).json({data}))
+
+  }
+
+  async function update(req, res, next) {
+    let updatedReservation = {
+      ...req.body.data
+    }
+
+    
+    const data = await service.update(updatedReservation);
+    res.json({ data })
+  }
+
+  async function updateStatus (req, res, next) {
+    const {reservation_id} = req.params;
+    let updatedReservation = await service.read(reservation_id);
+    const {status} = req.body.data
+    if (updatedReservation.status == "finished") return next({
+      status: 400,
+      message: "cannot updated a finished reservation"
+    })
+    if (status !== "booked" && status !== "seated" && status !== "finished" && status !== "cancelled") {
+      return next({
+        status: 400,
+        message: `${status} is not a valid status.`
+      })
+    }
+    updatedReservation.status = status;
+    const result = await service.update(updatedReservation)
+    res.status(200).json({ data: result })
+  }
+
+
+  
+
 module.exports = {
+  update: [reservationExists, hasValidProperties, hasValidPropertyValues, dateNotPastOrTuesday, update],
   list,
+  create: [hasValidProperties, hasValidPropertyValues , dateNotPastOrTuesday, create],
+  read: [reservationExists, read],
+  updateStatus: [reservationExists, updateStatus]
 };
