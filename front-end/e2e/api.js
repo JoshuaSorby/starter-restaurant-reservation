@@ -26,7 +26,7 @@ const headers = { "Content-Type": "application/json" };
 async function fetchJson(url, options, onCancel) {
   try {
     const response = await fetch(url, options);
-
+    console.log("This fetch is happening")
     if (response.status === 204) {
       return null;
     }
@@ -39,7 +39,7 @@ async function fetchJson(url, options, onCancel) {
     return payload.data;
   } catch (error) {
     if (error.name !== "AbortError") {
-      console.error(error.stack);
+      console.error(error.stack, "How is this uncaught");
       throw error;
     }
     return Promise.resolve(onCancel);

@@ -1,6 +1,7 @@
 /**
  * List handler for reservation resources
  */
+  const asyncErrorBoundary = require("../errors/asyncErrorBoundary")
 
   const service = require("./reservations.service")
 
@@ -92,9 +93,12 @@
 
   function dateNotPastOrTuesday(req, res, next) {
     //The following code converts the reservation_date in the date into a format that works with the Date constructor, allowing the getDay() method to be used
-
+    if (!req.body.data) {
+      return next();
+    };
     let date = req.body.data.reservation_date;
     date = date.substr(5, 2) + "/" + date.substr(8, 2) + "/" + date.substr(2, 2)
+    
     const today = new Date();
     const fullDate = new Date(date);
     const day = fullDate.getDay();
@@ -114,10 +118,27 @@
     }
   }
 
+  function validTime (req, res, next) {
+    const { reservation_time } = req.body.data;
+
+    if (Date.parse(`01/01/2011 ${reservation_time}`) < Date.parse('01/01/2011 10:30' ) ||
+        Date.parse(`01/01/2011 ${reservation_time}`) > Date.parse('01/01/2011 21:30' )) {
+      return next({
+        status: 400,
+        message: "reservation_time must be after 10:30 am and before 9:30 pm"
+      })
+    } else {
+      return next();
+    }
+  }
+
   async function list(req, res) {
     let results;
-    if (req.query.date) results = await service.listByDate(req.query.date);
-    if (req.query.mobile_number) results = await service.listByNumber(req.query.mobile_number);
+    if (req.query.date) {
+      results = await service.listByDate(req.query.date)
+    } else if (req.query.mobile_number) {
+      results = await service.listByNumber(req.query.mobile_number);
+    }
     res.json({ data: results})
   }
 
@@ -172,8 +193,8 @@
 
 module.exports = {
   update: [reservationExists, hasValidProperties, hasValidPropertyValues, dateNotPastOrTuesday, update],
-  list,
-  create: [hasValidProperties, hasValidPropertyValues , dateNotPastOrTuesday, create],
+  list: [dateNotPastOrTuesday, list],
+  create: [hasValidProperties, hasValidPropertyValues , dateNotPastOrTuesday, validTime, asyncErrorBoundary(create)],
   read: [reservationExists, read],
   updateStatus: [reservationExists, updateStatus]
 };

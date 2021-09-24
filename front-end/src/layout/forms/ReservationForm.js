@@ -1,15 +1,22 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router";
 import { createReservation } from "../../utils/api";
+import ErrorAlert from "../ErrorAlert";
 
 
-function ReservationForm() {
+function ReservationForm({changeDate}) {
+    const abortController = new AbortController();
+    
+    const [creationError, setCreationError] = useState("")
+
     const initialForm = {
         first_name: "",
         last_name: "",
         mobile_number: "",
         reservation_date: "",
-        reservation_time: ""
+        reservation_time: "",
+        people: "",
+        status: "booked"
     }
 
     const history = useHistory();
@@ -20,12 +27,20 @@ function ReservationForm() {
             [target.name]: target.value
         })
     };
-    const submitHandler = (event) => {
+    async function submitHandler(event) {
+        let error = false;
         event.preventDefault();
-        createReservation(formData);
-        console.log(`Reservation:`, formData, `Post:`, createReservation(formData))
-        setFormData({ ...initialForm });
-        history.push("/")
+        await createReservation(formData, abortController.signal)
+        .catch((err) => {
+            setCreationError(err);
+            error = true;
+        });
+        if (error === false) {
+            changeDate(formData.reservation_date)
+            setFormData({ ...initialForm });
+            history.goBack();
+        }
+        console.log(error)
     };
 
     const cancelHandler = (event) => {
@@ -86,6 +101,16 @@ function ReservationForm() {
                     onChange={handleChange}
                     value={formData.reservation_time}
                 />
+                <label htmlFor="people">
+                    Number of people:
+                </label>
+                <input 
+                    id="people"
+                    type="text"
+                    name="people"
+                    onChange={handleChange}
+                    value={formData.people}
+                />
             </form>
 
             <button 
@@ -100,6 +125,7 @@ function ReservationForm() {
             >
             Submit
             </button>
+            <ErrorAlert className="alert alert-danger" error={creationError} />
         </div>
     )
 }

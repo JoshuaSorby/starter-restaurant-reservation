@@ -4,7 +4,7 @@ exports.up = function(knex) {
         table.string("table_name");
         table.integer("capacity");
         table.integer("reservation_id");
-        table.string('status').notNullable().defaultTo('free')
+        table.string('status').defaultTo('free')
     })
 }
 

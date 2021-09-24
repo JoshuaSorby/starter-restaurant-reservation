@@ -29,7 +29,7 @@ function hasValidProperties(req, res, next) {
 
     const isEmpty = [];
      for (let key of Object.keys(data)) {
-       if (!data[key] ||data[key] == '' || 0) {
+       if (!data[key] ||data[key] == '' || data[key] == 0 && key !== "reservation_id") {
          isEmpty.push(key)
         }
      };
@@ -55,7 +55,7 @@ function hasValidPropertyValues(req, res, next) {
     }  else if (req.body.data.table_name.length <= 1) { 
       return next({
         status: 400,
-        message: `table_name must be a string`,
+        message: `invalid table_name`,
       });
     } else {
       next();
@@ -94,7 +94,19 @@ async function tableExists (req, res, next) {
   return next();
 }
 
-async function checkAvailability (req, res, next) {
+async function checkAvailabilitySeat (req, res, next) {
+  const {table_id} = req.params;
+  const table = await service.readTable(table_id);
+  if (table.status === "occupied") {
+    return next({ 
+      status: 400,
+      message: "Table is occupied"
+     })
+  } 
+    return next();
+}
+
+async function checkAvailabilityDestroy (req, res, next) {
   const {table_id} = req.params;
   const table = await service.readTable(table_id);
   if (table.status !== "occupied") {
@@ -193,6 +205,6 @@ module.exports = {
     list,
     read,
     create: [hasValidProperties, hasValidPropertyValues, create],
-    seat: [reservationIdExists, tableHasProperCapacity, tableExists, seat, updateReservationStatus],
-    destroy: [tableExists, checkAvailability, finishReservationStatus, destroy],
+    seat: [reservationIdExists, tableExists, checkAvailabilitySeat, tableHasProperCapacity, seat, updateReservationStatus],
+    destroy: [tableExists, checkAvailabilityDestroy, finishReservationStatus, destroy],
 };

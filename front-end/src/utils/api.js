@@ -30,11 +30,13 @@ headers.append("Content-Type", "application/json");
  *  If the response is not in the 200 - 399 range the promise is rejected.
  */
 async function fetchJson(url, options, onCancel) {
+  console.log("here", url, options)
   try {
+    console.log("before fetch")
     const response = await fetch(url, options);
-    console.log("Haven't failed yet", response)
-
+    console.log("After fetch")
     if (response.status === 204) {
+      console.log("null")
       return null;
     }
 
@@ -45,8 +47,10 @@ async function fetchJson(url, options, onCancel) {
     }
     return payload.data;
   } catch (error) {
+    console.log(error.name, "error is here!")
     if (error.name !== "AbortError") {
       console.error(error.stack);
+      console.log(error.message, "error here!")
       throw error;
     }
     return Promise.resolve(onCancel);
@@ -61,13 +65,13 @@ async function fetchJson(url, options, onCancel) {
 
 export async function createReservation(reservation, signal) {
   const url = `${API_BASE_URL}/reservations`;
+  reservation.people = Number(reservation.people)
   const options = {
     method: "POST",
     headers,
     body: JSON.stringify({ data: reservation }),
     signal,
    };
-   console.log(options.body)
    return await fetchJson(url, options);
 }
 
@@ -79,4 +83,35 @@ export async function listReservations(params, signal) {
   return await fetchJson(url, { headers, signal }, [])
     .then(formatReservationDate)
     .then(formatReservationTime);
+}
+
+export async function createTable(table, signal) {
+  const url = `${API_BASE_URL}/tables`;
+  table.capacity = Number(table.capacity)
+  const options = {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ data: table }),
+    signal,
+  };
+  return await fetchJson(url, options, table);
+}
+
+export async function listTables(params, signal) {
+  const url = new URL(`${API_BASE_URL}/tables`);
+  Object.entries(params).forEach(([key, value]) => 
+  url.searchParams.append(key, value.toString())
+  );
+  return await fetchJson(url, {headers, signal }, [])
+}
+
+export async function seatReservation(reservation_id, table_id) {
+  const url = `${API_BASE_URL}/tables/${table_id}/seat`;
+  const options = {
+    method: "PUT",
+    body: JSON.stringify({ data: { reservation_id } }),
+    headers,
+  };
+  console.log(options.body)
+  return await fetchJson(url, options);
 }
