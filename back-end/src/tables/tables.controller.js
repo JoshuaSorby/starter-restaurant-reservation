@@ -1,3 +1,4 @@
+const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 const service = require("./tables.service");
 
 const validProperties = [
@@ -120,6 +121,7 @@ async function checkAvailabilityDestroy (req, res, next) {
 
 async function create (req, res, next) {
     const data = req.body.data;
+    console.log("CREATING TABLE", req.body.data)
     const result = await service.create(data)
     res.status(201).json({data: result})
 }
@@ -181,7 +183,7 @@ async function updateReservationStatus (req, res, next) {
   })
   updatedReservation.status = "seated";
   await service.updateReservation(updatedReservation);
-  res.sendStatus(200);
+  res.status(200).json({data: updatedReservation});
 }
 
 async function finishReservationStatus (req, res, next) {
@@ -204,7 +206,7 @@ async function destroy (req, res, next) {
 module.exports = {
     list,
     read,
-    create: [hasValidProperties, hasValidPropertyValues, create],
-    seat: [reservationIdExists, tableExists, checkAvailabilitySeat, tableHasProperCapacity, seat, updateReservationStatus],
+    create: [hasValidProperties, hasValidPropertyValues, asyncErrorBoundary(create)],
+    seat: [reservationIdExists, tableExists, checkAvailabilitySeat, tableHasProperCapacity, seat, asyncErrorBoundary(updateReservationStatus)],
     destroy: [tableExists, checkAvailabilityDestroy, finishReservationStatus, destroy],
 };

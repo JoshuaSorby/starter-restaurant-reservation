@@ -1,26 +1,47 @@
-import React, { useState } from "react";
-import { useHistory } from "react-router";
-import { createReservation } from "../../utils/api";
+import React, { useEffect, useState } from "react";
+import { useHistory, useParams} from "react-router-dom";
+import { editReservation, readReservation } from "../../utils/api";
 import ErrorAlert from "../ErrorAlert";
 
 
-function ReservationForm({changeDate}) {
+function EditReservationForm({changeDate}) {
     const abortController = new AbortController();
     
     const [creationError, setCreationError] = useState("")
+    const {reservation_id} = useParams();
+    const [reservation, setReservation] = useState("");
+    const [reservationEror, setReservationError] = useState(null)
+    
 
-    const initialForm = {
-        first_name: "",
-        last_name: "",
-        mobile_number: "",
-        reservation_date: "",
-        reservation_time: "",
-        people: "",
-        status: "booked"
+    async function fetchReservation(reservationId) {
+        await readReservation(reservationId)
+        .then(setReservation)
+        .catch(setReservationError)
     }
 
-    const history = useHistory();
+    const initialForm = {
+        first_name: reservation.first_name,
+        last_name: reservation.last_name,
+        mobile_number: reservation.mobile_number,
+        reservation_date: reservation.reservation_date,
+        reservation_time: reservation.reservation_time,
+        people: reservation.people,
+        status: reservation.status,
+        reservation_id: reservation_id
+    }
+
     const [formData, setFormData] = useState({ ...initialForm })
+
+    useEffect(() => {
+        fetchReservation(reservation_id)
+    }, []) 
+    useEffect(() => {
+        setFormData({...initialForm})
+    }, [reservation])
+
+    
+    const history = useHistory();
+    
     const handleChange = ({target}) => {
         setFormData({
             ...formData,
@@ -30,13 +51,12 @@ function ReservationForm({changeDate}) {
     async function submitHandler(event) {
         event.preventDefault();
         let error = false;
-        await createReservation(formData, abortController.signal)
+        await editReservation(formData, abortController.signal)
         .catch((err) => {
             setCreationError(err);
             error = true;
         });
         if (error === false) {
-            await changeDate(formData.reservation_date)
             setFormData({ ...initialForm });
             history.push(`/dashboard?date=${formData.reservation_date}`);
         }
@@ -125,8 +145,9 @@ function ReservationForm({changeDate}) {
             Submit
             </button>
             <ErrorAlert className="alert alert-danger" error={creationError} />
+            <ErrorAlert className="alert alert-danger" error={reservationEror} />
         </div>
     )
 }
 
-export default ReservationForm;
+export default EditReservationForm;

@@ -53,7 +53,7 @@ function destroy (tableId) {
     return knex("tables")
         .select("*")
         .where({ table_id: tableId })
-        .del()
+        .update({ status: "free" })
 }
 module.exports = {
     list,

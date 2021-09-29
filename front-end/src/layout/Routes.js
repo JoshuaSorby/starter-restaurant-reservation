@@ -7,6 +7,8 @@ import ReservationForm from "./forms/ReservationForm";
 import { today } from "../utils/date-time";
 import TableForm from "./forms/TableForm";
 import Seat from "./Seat"
+import Search from "./forms/Search";
+import EditReservationForm from "./forms/EditReservationForm";
 
 /**
  * Defines all the routes for the application.
@@ -17,8 +19,13 @@ import Seat from "./Seat"
  */
 function Routes() {
   
+  const [mobile_number, setMobile_number] = useState(null)
   const [date, setDate] = useState(today())
+  function changeMobileNumber(newNumber) {
+    setMobile_number(newNumber);
+  }
   function changeDate(newDate) {
+    console.log("DATE INPUT INTO THE FORM: ", newDate)
     setDate(newDate);
   }
 
@@ -34,13 +41,19 @@ function Routes() {
         <Dashboard date={date} changeDate={changeDate}/>
       </Route>
       <Route exact={true} path="/reservations/new">
-        <ReservationForm changeDate={changeDate}/>
+        <ReservationForm changeDate={changeDate} date={date}/>
       </Route>
       <Route exact={true} path="/tables/new">
         <TableForm />
       </Route>
       <Route exact={true} path="/reservations/:reservation_id/seat">
-        <Seat />
+        <Seat date={date}/>
+      </Route>
+      <Route exact={true} path="/search">
+        <Search mobile_number={mobile_number} changeMobileNumber={changeMobileNumber}/>
+      </Route>
+      <Route exacty={true} path="/reservations/:reservation_id/edit">
+        <EditReservationForm />
       </Route>
       <Route>
         <NotFound />

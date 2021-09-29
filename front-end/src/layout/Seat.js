@@ -27,7 +27,8 @@ function Seat() {
         })
     }
 
-    async function submitHandler() {
+    async function submitHandler(event) {
+        event.preventDefault()
         let error = false;
         await seatReservation(reservation_id, tableId)
         .catch((err) => {
@@ -41,12 +42,17 @@ function Seat() {
         setTableId(target.value)
     }
 
+    async function cancelHandler(event) {
+        event.preventDefault();
+        history.goBack()
+    }
+
     return <div>
         <select name="table_id" onChange={changeHandler}>
             <option value="" key="blank">Select a table number</option>
             {tableOptions(tables)}
         </select>
-        <button onClick={history.goBack}>cancel</button>
+        <button type="button" onClick={cancelHandler}>Cancel</button>
         <button type="submit" onClick={submitHandler}>Seat</button>
         <ErrorAlert className="alert alert-danger" error={seatError} />
     </div>

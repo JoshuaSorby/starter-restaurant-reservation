@@ -49,7 +49,7 @@ describe("US-01 - Create and list reservations - E2E", () => {
       });
 
       await Promise.all([
-        page.click("[type=submit]"),
+        page.click("button[type=submit]"),
         page.waitForNavigation({ waitUntil: "networkidle0" }),
       ]);
 
@@ -57,6 +57,8 @@ describe("US-01 - Create and list reservations - E2E", () => {
         path: ".screenshots/us-01-submit-after.png",
         fullPage: true,
       });
+
+      console.log(page.lastName)
 
       await expect(page).toMatch(lastName);
     });

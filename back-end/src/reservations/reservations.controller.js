@@ -15,6 +15,7 @@
   ]
 
   async function reservationExists(req, res, next) {
+    console.log("req params:", req)
     const {reservation_id} = req.params;
     
     const reservation =  await service.read(reservation_id)
@@ -30,6 +31,7 @@
   }
 
   function hasValidProperties(req, res, next) {
+    console.log("THIS FAR", req.body)
     const data = req.body.data;
 
     if (!data) {
@@ -93,9 +95,6 @@
 
   function dateNotPastOrTuesday(req, res, next) {
     //The following code converts the reservation_date in the date into a format that works with the Date constructor, allowing the getDay() method to be used
-    if (!req.body.data) {
-      return next();
-    };
     let date = req.body.data.reservation_date;
     date = date.substr(5, 2) + "/" + date.substr(8, 2) + "/" + date.substr(2, 2)
     
@@ -104,21 +103,25 @@
     const day = fullDate.getDay();
 
     if (day == 2) {
+      
       return next ({
         status: 400,
         message: "closed on tuesday"
       })
     } else if (fullDate < today) {
+      
       return next({
         status: 400,
         message: "reservation_date must be in the future"
       })
     } else {
+
       next();
     }
   }
 
   function validTime (req, res, next) {
+    console.log("REQUEST: ", req.body)
     const { reservation_time } = req.body.data;
 
     if (Date.parse(`01/01/2011 ${reservation_time}`) < Date.parse('01/01/2011 10:30' ) ||
@@ -133,29 +136,33 @@
   }
 
   async function list(req, res) {
+    console.log("WHERE AT LIST", req.query)
     let results;
     if (req.query.date) {
       results = await service.listByDate(req.query.date)
     } else if (req.query.mobile_number) {
       results = await service.listByNumber(req.query.mobile_number);
     }
-    res.json({ data: results})
+    console.log("FINISHED LIST", results)
+    res.status(201).json({ data: results})
   }
 
   async function read (req, res, next) {
     const {reservation_id} = req.params;
     const results = await service.read(reservation_id);
-    res.json({data: results})
+    res.status(201).json({data: results})
   }
 
   async function create(req, res, next) {
+    console.log("WE'VE MADE IT TO CREATE")
     const {status} = req.body.data;
     if (status == "seated" || status == "finished") return next ({
       status: 400,
       message: "status cannot be 'seated' or 'finished'"
     })
-    await service.create(req.body.data)
-    .then((data) => res.status(201).json({data}))
+    console.log("WE'Ve MADE IT PAST CREATE")
+    const results = await service.create(req.body.data)
+    res.status(201).json({data: results})
 
   }
 
@@ -171,11 +178,13 @@
 
   async function updateStatus (req, res, next) {
     const {reservation_id} = req.params;
+    console.log("reservationd id:", reservation_id)
+    console.log("New status:", req.body.data)
     let updatedReservation = await service.read(reservation_id);
     const {status} = req.body.data
-    if (updatedReservation.status == "finished") return next({
+    if (updatedReservation.status == "finished" && status !== "cancelled") return next({
       status: 400,
-      message: "cannot updated a finished reservation"
+      message: `cannot update a finished reservation ${status}`
     })
     if (status !== "booked" && status !== "seated" && status !== "finished" && status !== "cancelled") {
       return next({
@@ -192,9 +201,9 @@
   
 
 module.exports = {
-  update: [reservationExists, hasValidProperties, hasValidPropertyValues, dateNotPastOrTuesday, update],
-  list: [dateNotPastOrTuesday, list],
+  update: [asyncErrorBoundary(reservationExists), hasValidProperties, hasValidPropertyValues, dateNotPastOrTuesday, asyncErrorBoundary(update)],
+  list: [asyncErrorBoundary(list)],
   create: [hasValidProperties, hasValidPropertyValues , dateNotPastOrTuesday, validTime, asyncErrorBoundary(create)],
-  read: [reservationExists, read],
-  updateStatus: [reservationExists, updateStatus]
+  read: [asyncErrorBoundary(reservationExists), asyncErrorBoundary(read)],
+  updateStatus: [asyncErrorBoundary(reservationExists), asyncErrorBoundary(updateStatus)]
 };

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import {Link} from "react-router-dom"
-import { listReservations, listTables } from "../utils/api";
+import { listReservations, listTables, finishTable } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
+import ReservationList from "../layout/ReservationList";
+import TableList from "../layout/TableList";
+import { useParams, useHistory } from "react-router-dom";
 
 
 /**
@@ -19,59 +21,49 @@ function Dashboard({date, changeDate}) {
   let todayText = `${year}-${month}-${day}.`;
   todayText = new Date(todayText);
 
+  const abortController = new AbortController();
   const [reservations, setReservations] = useState([]);
   const [reservationsError, setReservationsError] = useState(null);
-  const [tables, setTables] = useState([]);
-  const [tablesError, setTablesError] = useState(null);
 
-  useEffect(loadDashboard, [date]);
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const params = Object.fromEntries(urlSearchParams.entries());
+  console.log("PARAMS", params)
 
-  async function loadDashboard() {
-    const abortController = new AbortController();
-    setReservationsError(null);
-    await listReservations({ date }, abortController.signal)
-      .then(setReservations)
-      .catch(setReservationsError);
-    await listTables(abortController.signal)
-      .then(setTables)
-      .catch(setTablesError)
-    return () => abortController.abort();
+  const [formDate, setFormDate] = useState(params.date);
+  const history = useHistory();
+  
+  useEffect(initialReservationList, [])
+  async function initialReservationList() {
+    setFormDate(params.date)
+    changeDate(formDate)
+    await listReservations({date: params.date}, abortController.signal)
+    .then(setReservations)
+    .catch(setReservationsError)
   }
+  async function dateSubmitHandler(event) {
+    event.preventDefault();
+    console.log("RELATED?", event)
+    changeDate(formDate)
+    await listReservations(params.date)
+    .then(setReservations)
+    .catch((setReservationsError))
+    history.push(`/dashboard?date=${formDate}`)
+    
+  }
+
 
   function dateChangeHandler({target}) {
-    changeDate(target.value)
-  }
-  
-  const reservationsTable = (reservations) => {
-    if (reservations) {
-      let i = 0;
-      return reservations.map((reservation) => {
-        i++;
-        return <tr key={i}>
-          <td>{reservation.first_name}</td>
-          <td>{reservation.last_name}</td>
-          <td>{reservation.mobile_number}</td>
-          <td>{reservation.reservation_date}</td>
-          <td>{reservation.reservation_time}</td>
-          <td>{reservation.people}</td>
-          <td><Link to={`/reservations/${reservation.reservation_id}/seat`}><button>Seat</button></Link></td>
-        </tr>
-      })
-    }
+    console.log("RELATED?")
+    setFormDate(target.value);
+    console.log(target.value)
   }
 
-  const tablesTable = (tables) => {
-    if (tables) {
-      let i = 0;
-      return tables.map((table) => {
-        i++;
-        return <tr key={i}>
-          <td>{table.table_name}</td>
-          <td>{table.capacity}</td>
-          <td>{table.status}</td>
-        </tr>
-      })
-    }
+
+  async function changeReservations() {
+    console.log("RELATED?", date)
+    await listReservations({date})
+    .then(setReservations)
+    .catch((setReservationsError))
   }
 
   return (
@@ -79,47 +71,20 @@ function Dashboard({date, changeDate}) {
       <h1>Dashboard</h1>
       <div className="d-md-flex mb-3">
         <h4 className="mb-0">Reservations for</h4>
-        <form>
+        <form onSubmit={dateSubmitHandler}>
           <label htmlFor="date"></label>
           <input
             name="date"
             type="date"
-            value={date}
+            value={formDate}
             onChange={dateChangeHandler}
           />
+          <button type="submit">Enter</button>
         </form>
       </div>
-      <ErrorAlert error={reservationsError} />
      
-      <table>
-        <thead>
-          <tr key="1">
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Mobile Number</th>
-            <th>Reservation Date</th>
-            <th>Reservation Time</th>
-            <th>People</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reservationsTable(reservations)}
-        </tbody>
-      </table>
-
-      <ErrorAlert error={tablesError} />
-      <table>
-        <thead>
-          <tr key="1">
-            <th>Table Name</th>
-            <th>Capacity</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tablesTable(tables)}
-        </tbody>
-      </table>
+      <ReservationList date={date} changeReservations={changeReservations} reservations={reservations}/>
+      <TableList changeReservations={changeReservations} reservations={reservations}/>
     </main>
   );
 }
