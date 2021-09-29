@@ -31,18 +31,11 @@ function TableList({changeReservations, reservations}) {
 
     async function finishHandler({ target }) {
         const result = window.confirm("Is this table ready to seat new guests? This cannot be undone.")
-        if (result) {
-          let error = false;
+        if (result === true) {
           await finishTable(target.value)
           .then(() => listTables())
           .then(setTables)
-          .catch((err) => {
-            setTablesError(err);
-            error = true;
-          })
-          if (error === false) {
-            await changeReservations();
-          };
+          await changeReservations();
         }
     }
     

@@ -13,6 +13,8 @@ const onPageConsole = (msg) =>
     console.log(`<LOG::page console ${msg.type()}>`, ...eventJson)
   );
 
+  console.log('THIS IS SOME GIBBERISH')
+
 describe("US-05 - Finish an occupied table - E2E", () => {
   let page;
   let browser;
@@ -74,6 +76,8 @@ describe("US-05 - Finish an occupied table - E2E", () => {
       await page.waitForSelector(finishButtonSelector);
 
       page.on("dialog", async (dialog) => {
+        console.log('THIS IS SOME GIBBERISH')
+        console.log(JSON.stringify(dialog))
         expect(dialog.message()).toContain(
           "Is this table ready to seat new guests?"
         );

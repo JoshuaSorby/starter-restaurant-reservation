@@ -86,7 +86,9 @@ describe("US-08 - Change an existing reservation - E2E", () => {
           );
         }
 
+        
         page.on("dialog", async (dialog) => {
+          console.log(JSON.stringify(dialog))
           expect(dialog.message()).toContain(
             "Do you want to cancel this reservation?"
           );

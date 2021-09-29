@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { listReservations, listTables, finishTable } from "../utils/api";
-import ErrorAlert from "../layout/ErrorAlert";
+import { listReservations} from "../utils/api";
 import ReservationList from "../layout/ReservationList";
 import TableList from "../layout/TableList";
-import { useParams, useHistory } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 
 
 /**

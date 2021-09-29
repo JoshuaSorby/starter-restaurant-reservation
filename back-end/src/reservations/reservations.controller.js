@@ -144,13 +144,13 @@
       results = await service.listByNumber(req.query.mobile_number);
     }
     console.log("FINISHED LIST", results)
-    res.status(201).json({ data: results})
+    res.status(200).json({ data: results})
   }
 
   async function read (req, res, next) {
     const {reservation_id} = req.params;
     const results = await service.read(reservation_id);
-    res.status(201).json({data: results})
+    res.status(200).json({data: results})
   }
 
   async function create(req, res, next) {
