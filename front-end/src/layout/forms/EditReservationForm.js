@@ -4,12 +4,12 @@ import { editReservation, readReservation } from "../../utils/api";
 import ErrorAlert from "../ErrorAlert";
 
 
-function EditReservationForm({changeDate}) {
+function EditReservationForm() {
     const abortController = new AbortController();
     
     const [creationError, setCreationError] = useState("")
     const {reservation_id} = useParams();
-    const [reservation, setReservation] = useState("");
+    const [reservation, setReservation] = useState(readReservation(reservation_id));
     const [reservationEror, setReservationError] = useState(null)
     
 

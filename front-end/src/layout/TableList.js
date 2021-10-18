@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import ErrorAlert from "./ErrorAlert";
-import {finishTable, listTables} from "../utils/api"
+import {finishTable, listTables} from "../utils/api";
+import "./Layout.css"
 
 
-function TableList({changeReservations, reservations}) {
+function TableList({changeReservations }) {
   const [tables, setTables] = useState([]);
   const [tablesError, setTablesError] = useState(null);
-
-  console.log(tables, "TABLES HERE")
 
   const tablesTable = (tables) => {
     if (tables) {
@@ -17,8 +16,8 @@ function TableList({changeReservations, reservations}) {
             return <tr key={i}>
               <td>{table.table_name}</td>
               <td>{table.capacity}</td>
-              <td>{table.status}</td>
-              <td><button data-reservation-id-finish={table.table_id} value={table.table_id} onClick={finishHandler}> finish </button></td>
+              <td><p data-table-id-status={table.table_id}>{table.status}</p></td>
+              <td ><button data-table-id-finish={table.table_id} value={table.table_id} onClick={finishHandler}> finish </button></td>
             </tr>
           })
     }
@@ -27,15 +26,16 @@ function TableList({changeReservations, reservations}) {
     useEffect(() => {
         listTables()
         .then(setTables)
+        .catch(setTablesError)
     }, [])
 
     async function finishHandler({ target }) {
         const result = window.confirm("Is this table ready to seat new guests? This cannot be undone.")
         if (result === true) {
           await finishTable(target.value)
-          .then(() => listTables())
+          await listTables()
           .then(setTables)
-          await changeReservations();
+          changeReservations()
         }
     }
     
@@ -48,6 +48,7 @@ function TableList({changeReservations, reservations}) {
                     <th>Table Name</th>
                     <th>Capacity</th>
                     <th>Status</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>

@@ -58,8 +58,6 @@ describe("US-01 - Create and list reservations - E2E", () => {
         fullPage: true,
       });
 
-      console.log(page.lastName)
-
       await expect(page).toMatch(lastName);
     });
 

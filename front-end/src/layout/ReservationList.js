@@ -1,31 +1,24 @@
-import React, {useEffect, useState} from "react";
-import { Link, useRouteMatch } from "react-router-dom";
-import {listReservations, updateStatus} from "../utils/api";
+import React from "react";
+import { Link } from "react-router-dom";
+import {updateStatus} from "../utils/api";
+import "./Layout.css"
 
-function ReservationList({mobile_number, date, changeReservations, reservations}) {
+function ReservationList({ changeReservations, reservations}) {
     
-    useEffect(changeReservations, [date]);
-    useEffect(changeReservations, [mobile_number]);
-
-
     async function cancelHandler({target}) {
       const result = window.confirm("Do you want to cancel this reservation? This cannot be undone.")
       if (result === true) {
         await updateStatus(target.value, {status:"cancelled"})
-        await listReservations({date})
-        .then(changeReservations);
-        };
+        await changeReservations()
+      } else {alert("Some word inside")}
     }
-
-
-
+    
     const reservationsTable = (reservations) => {
         if (reservations) {
           let i = 0;
           return reservations.map((reservation) => {
-            let display = false;
             i++;
-            if (reservation.status == "seated" && reservation.status !== "cancelled") {
+            if (reservation.status === "seated" && reservation.status !== "cancelled") {
               return <tr key={i}>
               <td>{reservation.first_name}</td>
               <td>{reservation.last_name}</td>
@@ -48,13 +41,13 @@ function ReservationList({mobile_number, date, changeReservations, reservations}
               <td><p data-reservation-id-status={reservation.reservation_id}>{reservation.status}</p></td>
               <td><Link to={`/reservations/${reservation.reservation_id}/seat`}> <button type="button">seat</button> </Link></td>
               <td><Link to={`/reservations/${reservation.reservation_id}/edit`}> <button value= {reservation.reservation_id}>edit</button></Link></td>
-              <td><button data-reservation-id-cancel={reservation.reservation_id} value={reservation.reservation_id} onClick={cancelHandler}> cancel </button></td>
+              <td><button className="cancel" data-reservation-id-cancel={reservation.reservation_id} value={reservation.reservation_id} onClick={cancelHandler}> cancel </button></td>
             </tr>
           })
         }
     }
 
-    return <div>
+    if (reservations.length) {return <div>
     <table>
         <thead>
             <tr key="1">
@@ -65,6 +58,9 @@ function ReservationList({mobile_number, date, changeReservations, reservations}
                 <th>Reservation Time</th>
                 <th>People</th>
                 <th>Status</th>
+                <th></th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -72,7 +68,9 @@ function ReservationList({mobile_number, date, changeReservations, reservations}
         </tbody>
     </table>
     
-    </div>
+    </div>} else {
+      return <h1>No reservations found</h1>
+    }
 }
 
 export default ReservationList;

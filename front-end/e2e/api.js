@@ -26,7 +26,6 @@ const headers = { "Content-Type": "application/json" };
 async function fetchJson(url, options, onCancel) {
   try {
     const response = await fetch(url, options);
-    console.log("This fetch is happening")
     if (response.status === 204) {
       return null;
     }
@@ -86,6 +85,8 @@ async function seatReservation(reservation_id, table_id) {
   };
   return await fetchJson(url, options, {});
 }
+
+
 
 module.exports = {
   createReservation,

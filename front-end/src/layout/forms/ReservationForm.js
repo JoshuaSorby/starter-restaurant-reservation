@@ -112,18 +112,20 @@ function ReservationForm({changeDate}) {
                 />
             </form>
 
-            <button 
-                type="button"
-                onClick={cancelHandler}
-            >
-            Cancel
-            </button>
-            <button 
-                type="submit"
-                onClick={submitHandler}
-            >
-            Submit
-            </button>
+            <div className="buttons">
+                <button 
+                    type="button"
+                    onClick={cancelHandler}
+                >
+                Cancel
+                </button>
+                <button 
+                    type="submit"
+                    onClick={submitHandler}
+                >
+                Submit
+                </button>
+            </div>
             <ErrorAlert className="alert alert-danger" error={creationError} />
         </div>
     )

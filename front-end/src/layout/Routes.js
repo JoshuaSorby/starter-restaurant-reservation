@@ -20,13 +20,14 @@ import EditReservationForm from "./forms/EditReservationForm";
 function Routes() {
   
   const [mobile_number, setMobile_number] = useState(null)
+  console.log("confusion")
   const [date, setDate] = useState(today())
   function changeMobileNumber(newNumber) {
     setMobile_number(newNumber);
   }
-  function changeDate(newDate) {
-    console.log("DATE INPUT INTO THE FORM: ", newDate)
-    setDate(newDate);
+  function changeDate(test) {
+    console.log("today", today())
+    setDate(test);
   }
 
   return (

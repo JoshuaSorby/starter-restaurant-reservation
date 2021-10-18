@@ -3,7 +3,9 @@ import { listReservations} from "../utils/api";
 import ReservationList from "../layout/ReservationList";
 import TableList from "../layout/TableList";
 import { useHistory } from "react-router-dom";
+import { today, next, previous } from "../utils/date-time";
 
+//WHen the test makes a new Table, it does so with a reservation Id already in it. Make the reservation with that id seat and status of the table occupied to beign with
 
 /**
  * Defines the dashboard page.
@@ -12,13 +14,13 @@ import { useHistory } from "react-router-dom";
  * @returns {JSX.Element}
  */
 function Dashboard({date, changeDate}) {
-  let newDate = new Date()
+  let newDate = new Date(date)
   let day = newDate.getDate();
   let month = newDate.getMonth()+1;
   let year = newDate.getFullYear();
 
-  let todayText = `${year}-${month}-${day}.`;
-  todayText = new Date(todayText);
+
+  let todayText = `${year}-${month}-${day}`;
 
   const abortController = new AbortController();
   const [reservations, setReservations] = useState([]);
@@ -26,64 +28,68 @@ function Dashboard({date, changeDate}) {
 
   const urlSearchParams = new URLSearchParams(window.location.search);
   const params = Object.fromEntries(urlSearchParams.entries());
-  console.log("PARAMS", params)
 
-  const [formDate, setFormDate] = useState(params.date);
   const history = useHistory();
-  
-  useEffect(initialReservationList, [])
+
   async function initialReservationList() {
-    setFormDate(params.date)
-    changeDate(formDate)
+    if (params.date) {
+      changeDate(params.date)
+    }
     await listReservations({date: params.date}, abortController.signal)
     .then(setReservations)
     .catch(setReservationsError)
   }
-  async function dateSubmitHandler(event) {
-    event.preventDefault();
-    console.log("RELATED?", event)
-    changeDate(formDate)
-    await listReservations(params.date)
-    .then(setReservations)
-    .catch((setReservationsError))
-    history.push(`/dashboard?date=${formDate}`)
-    
-  }
 
-
-  function dateChangeHandler({target}) {
-    console.log("RELATED?")
-    setFormDate(target.value);
-    console.log(target.value)
-  }
-
+  useEffect(() => {
+    initialReservationList()
+  }, [])
+  
 
   async function changeReservations() {
-    console.log("RELATED?", date)
-    await listReservations({date})
+    await listReservations({date: date}, abortController.signal)
+    .then(setReservations)
+    .catch(reservationsError)
+  }
+
+  async function todayDate(event) {
+    changeDate(today())
+    await listReservations({date: today()})
     .then(setReservations)
     .catch((setReservationsError))
+    history.push(`/dashboard?date=${today()}`)
+  }
+
+  async function previousDate(event) {
+    event.preventDefault()
+    changeDate(previous(date))
+    await listReservations({date: previous(date)})
+    .then(setReservations)
+    .catch((setReservationsError))
+    history.push(`/dashboard?date=${previous(date)}`)
+  }
+
+  async function nextDate(event) {
+    event.preventDefault()
+    changeDate(next(date))
+    await listReservations({date: next(date)})
+    .then(setReservations)
+    .catch((setReservationsError))
+    history.push(`/dashboard?date=${next(date)}`)
   }
 
   return (
     <main>
       <h1>Dashboard</h1>
-      <div className="d-md-flex mb-3">
-        <h4 className="mb-0">Reservations for</h4>
-        <form onSubmit={dateSubmitHandler}>
-          <label htmlFor="date"></label>
-          <input
-            name="date"
-            type="date"
-            value={formDate}
-            onChange={dateChangeHandler}
-          />
-          <button type="submit">Enter</button>
-        </form>
+      <div className="today">
+        <h4 className="mb-0">Reservations for {todayText}</h4>
+          <button onClick={previousDate}>Previous</button>
+          <button onClick={todayDate}>Today</button>
+          <button onClick={nextDate}>Next</button>
       </div>
      
       <ReservationList date={date} changeReservations={changeReservations} reservations={reservations}/>
-      <TableList changeReservations={changeReservations} reservations={reservations}/>
+      <hr/>
+      <TableList changeReservations={changeReservations}/>
     </main>
   );
 }

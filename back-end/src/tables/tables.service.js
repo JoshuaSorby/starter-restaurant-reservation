@@ -35,20 +35,20 @@ function list() {
         .orderBy("table_name")
 }
 
-function read(tableId) {
+async function read(tableId) {
     return knex("tables")
         .select("*")
         .where({table_id: tableId})
         .then((records) => records[0])
 }
 
-function create(table) {
+async function create(table) {
     return knex("tables")
         .insert(table, "*")
         .then((createdRecrods) => createdRecrods[0])
 }
 
-function seat (updatedTable) {
+async function seat (updatedTable) {
     return knex("tables")
         .select("*")
         .where({ table_id: updatedTable.table_id })

@@ -121,7 +121,13 @@ async function checkAvailabilityDestroy (req, res, next) {
 
 async function create (req, res, next) {
     const data = req.body.data;
-    console.log("CREATING TABLE", req.body.data)
+    //There is no way to create a table with a reservation id within the application; however, one of the tests does just that. Therefore, the following code must be implemented.
+    if (data.reservation_id) {
+      data.status = "occupied"
+      let updatedReservation = await service.readReservation(data.reservation_id);
+      updatedReservation.status = "seated";
+      await service.updateReservation(updatedReservation);
+    }
     const result = await service.create(data)
     res.status(201).json({data: result})
 }
@@ -175,7 +181,6 @@ async function seat (req, res, next) {
 async function updateReservationStatus (req, res, next) {
   const {table_id} = req.params;
   let table = await service.read(table_id)
-  console.log(table, "know")
   let updatedReservation = await service.readReservation(table.reservation_id)
   if (updatedReservation.status == "seated") return next({
     status: 400,

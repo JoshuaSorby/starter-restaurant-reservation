@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { listReservations, listTables, finishTable } from "../../utils/api";
-import ErrorAlert from "../ErrorAlert";
+import { listReservations } from "../../utils/api";
 import ReservationList from "../ReservationList";
+import "../Layout.css"
 
 function Search({mobile_number, changeMobileNumber}) {
 
     const [reservations, setReservations] = useState([])
-    const [reservationsError, setReservationsError] = useState([null])
+    const [reservationsError, setReservationsError] = useState("")
     const [formData, setFormData] = useState("")
 
 
@@ -29,9 +29,8 @@ function Search({mobile_number, changeMobileNumber}) {
         setFormData("")
     }
 
-    if (reservations.length) {
         return <div>
-            <form>
+            <form id="searchForm">
                 <label htmlFor="mobile_number">
                     <input 
                         type="text"
@@ -46,23 +45,6 @@ function Search({mobile_number, changeMobileNumber}) {
             </form>
             <ReservationList mobile_number={mobile_number} changeReservations={changeReservations} reservations={reservations}/>
             </div>
-    } else {
-        return <div>
-             <form>
-                <label htmlFor="mobile_number">
-                    <input 
-                        type="text"
-                        name="mobile_number"
-                        id="mobile_number"
-                        placeholder="Enter a customer's phone number"
-                        onChange={changeHandler}
-                    />
-                    <button type="submit" onClick={submitHandler}>Find</button>
-                </label>
-            </form>
-            <h1>No reservations found</h1>
-        </div>
-    }
 }
 
 export default Search;

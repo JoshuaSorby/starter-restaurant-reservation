@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useHistory } from "react-router";
 import { createTable } from "../../utils/api";
 import ErrorAlert from "../ErrorAlert";
+import "../Layout.css"
 
 
 function TableForm() {
@@ -64,7 +65,7 @@ function TableForm() {
                 />
                 
             </form>
-
+            <div className="buttons">
             <button 
                 type="button"
                 onClick={cancelHandler}
@@ -77,6 +78,7 @@ function TableForm() {
             >
             Submit
             </button>
+            </div>
             <ErrorAlert className="alert alert-danger" error={creationError} />
         </div>
     )

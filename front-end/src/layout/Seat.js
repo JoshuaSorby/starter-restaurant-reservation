@@ -5,7 +5,7 @@ import ErrorAlert from "./ErrorAlert";
 
 
 
-function Seat() {
+function Seat({date}) {
     const abortController = new AbortController();
     const [tables, setTables] = useState([])
     const history = useHistory();
@@ -35,7 +35,7 @@ function Seat() {
             setSeatError(err);
             error = true;
         })
-        if (error == false) history.goBack();
+        if (error === false) history.push(`/dashboard?date=${date}`);
     }
 
     function changeHandler({ target }) {
