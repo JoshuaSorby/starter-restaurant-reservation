@@ -14,14 +14,6 @@ import { today, next, previous } from "../utils/date-time";
  * @returns {JSX.Element}
  */
 function Dashboard({date, changeDate}) {
-  let newDate = new Date(date)
-  let day = newDate.getDate();
-  let month = newDate.getMonth()+1;
-  let year = newDate.getFullYear();
-
-
-  let todayText = `${year}-${month}-${day}`;
-
   const abortController = new AbortController();
   const [reservations, setReservations] = useState([]);
   const [reservationsError, setReservationsError] = useState(null);
@@ -81,7 +73,7 @@ function Dashboard({date, changeDate}) {
     <main>
       <h1>Dashboard</h1>
       <div className="today">
-        <h4 className="mb-0">Reservations for {todayText}</h4>
+        <h4 className="mb-0">Reservations for {date}</h4>
           <button onClick={previousDate}>Previous</button>
           <button onClick={todayDate}>Today</button>
           <button onClick={nextDate}>Next</button>
